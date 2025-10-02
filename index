@@ -3,41 +3,710 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Hola Mundo</title>
+  <title>Flujograma dinámico</title>
   <style>
-    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
-    html, body { height: 100%; margin: 0; }
-    body { display: grid; place-items: center; background: #f7f7f8; color: #111; }
-    .card {
-      background: #fff;
-      padding: 2.5rem 3rem;
-      border-radius: 1.25rem;
-      box-shadow: 0 10px 25px rgba(0,0,0,.07);
+    :root {
+      color-scheme: light;
+      font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%);
+      color: #101828;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 2.5rem clamp(1.5rem, 4vw, 4rem) 1rem;
       text-align: center;
-      max-width: 640px;
     }
-    h1 { margin: 0 0 .5rem; font-size: clamp(2rem, 2.5vw + 1rem, 3rem); }
-    p { margin: 0 0 1.25rem; line-height: 1.6; color: #333; }
-    button {
-      border: 0; padding: .8rem 1rem; border-radius: .8rem; cursor: pointer;
-      background: #111; color: #fff; font-weight: 600;
+
+    header h1 {
+      margin: 0 0 0.75rem;
+      font-size: clamp(1.75rem, 2vw + 1rem, 2.75rem);
+      font-weight: 700;
+      letter-spacing: -0.01em;
     }
-    button:active { transform: translateY(1px); }
-    footer { margin-top: 1rem; font-size: .9rem; color: #666; }
+
+    header p {
+      margin: 0 auto;
+      max-width: 54rem;
+      line-height: 1.6;
+      font-size: 1.05rem;
+      color: #475467;
+    }
+
+    main {
+      flex: 1;
+      padding: 0 clamp(1.5rem, 4vw, 4rem) 3rem;
+      display: grid;
+      gap: 1.5rem;
+    }
+
+    .controls {
+      display: grid;
+      gap: 1rem;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 1.25rem;
+      padding: 1.75rem clamp(1.25rem, 3vw, 2.5rem);
+      box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(12px);
+      z-index: 2;
+    }
+
+    .controls .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .controls label {
+      font-weight: 600;
+      color: #1d2939;
+    }
+
+    .controls output {
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      color: #0f172a;
+      min-width: 4.5ch;
+      display: inline-flex;
+      justify-content: flex-end;
+    }
+
+    .controls button {
+      border: none;
+      border-radius: 999px;
+      background: #2563eb;
+      color: #fff;
+      padding: 0.65rem 1.25rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background 0.3s ease;
+    }
+
+    .controls button:hover {
+      background: #1d4ed8;
+    }
+
+    .timeline {
+      width: min(100%, 720px);
+      margin-inline: auto;
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .timeline input[type="range"] {
+      width: 100%;
+    }
+
+    .legend {
+      display: grid;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .legend-bar {
+      height: 0.75rem;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #1a9850 0%, #fee08b 50%, #d73027 100%);
+      position: relative;
+    }
+
+    .legend-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: #475467;
+      font-weight: 500;
+    }
+
+    figure {
+      margin: 0;
+      padding: clamp(1.5rem, 3vw, 2.75rem);
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 1.5rem;
+      box-shadow: 0 25px 80px rgba(15, 23, 42, 0.12);
+      overflow: hidden;
+      position: relative;
+    }
+
+    svg {
+      width: 100%;
+      height: auto;
+      display: block;
+      max-height: 720px;
+    }
+
+    .lane-label {
+      font-size: 0.95rem;
+      font-weight: 600;
+      fill: #1f2937;
+    }
+
+    .lane-divider {
+      stroke: rgba(15, 23, 42, 0.08);
+      stroke-width: 1;
+      stroke-dasharray: 8 6;
+    }
+
+    .lane-background {
+      fill: rgba(148, 163, 184, 0.08);
+    }
+
+    .flow-line {
+      fill: none;
+      stroke: #94a3b8;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.55;
+      transition: stroke 0.3s ease, opacity 0.3s ease;
+    }
+
+    .flow-line.is-active {
+      stroke: #2563eb;
+      opacity: 0.95;
+      filter: drop-shadow(0 0 6px rgba(37, 99, 235, 0.35));
+    }
+
+    .activity rect {
+      rx: 16;
+      ry: 16;
+      stroke: rgba(15, 23, 42, 0.12);
+      stroke-width: 1.5;
+      transition: transform 0.4s ease, stroke 0.3s ease, opacity 0.3s ease;
+      opacity: 0.55;
+    }
+
+    .activity.is-active rect {
+      stroke: #0f172a;
+      stroke-width: 2.5;
+      opacity: 1;
+      transform: translateY(-4px);
+    }
+
+    .activity text {
+      fill: #0f172a;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      pointer-events: none;
+    }
+
+    .activity .meta {
+      fill: #334155;
+      font-size: 0.75rem;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+
+    .activity.is-active .meta {
+      opacity: 1;
+    }
+
+    .activity title {
+      font-size: 0.8rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      color: #64748b;
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 960px) {
+      header {
+        padding-inline: clamp(1rem, 6vw, 2rem);
+      }
+
+      figure {
+        padding: 1.5rem;
+      }
+
+      svg {
+        max-height: none;
+      }
+    }
   </style>
 </head>
 <body>
-  <main class="card" role="main">
-    <h1>¡Hola, mundo! 👋</h1>
-    <p>Este es un ejemplo mínimo de una página HTML lista para usar.</p>
-    <button id="btn">Saludar</button>
-    <footer>HTML5 • Accesible • Responsive</footer>
+  <header>
+    <h1>Flujograma animado con carga laboral</h1>
+    <p>
+      Observa cómo evoluciona el proceso a lo largo del tiempo. El mapa de calor indica la carga de trabajo estimada para cada actividad,
+      mientras que las líneas resaltadas muestran las transiciones activas en cada momento.
+    </p>
+  </header>
+
+  <main>
+    <section class="controls" aria-label="Controles de la línea de tiempo">
+      <div class="row">
+        <label for="timeline">Línea de tiempo del proceso</label>
+        <output id="timeValue" for="timeline">0.0</output>
+      </div>
+      <div class="timeline">
+        <input type="range" id="timeline" min="0" max="18" value="0" step="0.01" />
+        <div class="row" style="justify-content: space-between;">
+          <button type="button" id="togglePlay" aria-pressed="true">⏸️ Pausar animación</button>
+          <span style="color:#475467;font-size:0.9rem;">Arrastra el control o reproduce la animación automática.</span>
+        </div>
+      </div>
+      <div class="legend" aria-hidden="true">
+        <span style="font-weight:600;color:#1d2939;">Mapa de calor: carga laboral estimada</span>
+        <div class="legend-bar"></div>
+        <div class="legend-labels">
+          <span>Baja</span>
+          <span>Media</span>
+          <span>Alta</span>
+        </div>
+      </div>
+    </section>
+
+    <figure aria-labelledby="chartTitle">
+      <figcaption id="chartTitle" style="position:absolute;clip:rect(0 0 0 0);width:1px;height:1px;margin:-1px;overflow:hidden;">
+        Diagrama de flujo con animación temporal y mapa de calor.
+      </figcaption>
+      <svg id="diagram" role="img" aria-labelledby="chartTitle">
+        <defs>
+          <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L10,5 L0,10 z" fill="#2563eb"></path>
+          </marker>
+        </defs>
+        <g id="lanes"></g>
+        <g id="flows"></g>
+        <g id="activities"></g>
+      </svg>
+    </figure>
   </main>
 
+  <footer>Interactúa con la animación para explorar cómo se conectan las actividades a lo largo del tiempo.</footer>
+
   <script>
-    document.getElementById('btn').addEventListener('click', () => {
-      alert('¡Hola desde JavaScript!');
+    const swimlanes = [
+      { id: "cliente", label: "Cliente y otras áreas" },
+      { id: "multidisciplinario", label: "Equipo multidisciplinario" },
+      { id: "capex", label: "Comité y análisis CAPEX" },
+      { id: "contrataciones", label: "Contrataciones, impuestos y jurídico" },
+      { id: "seguimiento", label: "Seguimiento e implementación" }
+    ];
+
+    const activities = [
+      {
+        id: "detectar",
+        label: "Detectar necesidad",
+        lane: "cliente",
+        x: 140,
+        y: 52,
+        width: 200,
+        height: 64,
+        start: 0,
+        duration: 1.6,
+        workload: 0.35,
+        description: "El cliente identifica y comunica la necesidad inicial."
+      },
+      {
+        id: "solicitud",
+        label: "Registrar solicitud",
+        lane: "cliente",
+        x: 380,
+        y: 52,
+        width: 200,
+        height: 64,
+        start: 1.8,
+        duration: 1.4,
+        workload: 0.45,
+        description: "Se documenta la solicitud y se asigna al equipo responsable."
+      },
+      {
+        id: "analisis",
+        label: "Análisis técnico y operativo",
+        lane: "multidisciplinario",
+        x: 200,
+        y: 74,
+        width: 240,
+        height: 70,
+        start: 3.4,
+        duration: 2.6,
+        workload: 0.72,
+        description: "El equipo evalúa factibilidad, riesgos y opciones de solución."
+      },
+      {
+        id: "presupuesto",
+        label: "Preparar presupuesto CAPEX",
+        lane: "capex",
+        x: 460,
+        y: 70,
+        width: 240,
+        height: 70,
+        start: 6.2,
+        duration: 2.4,
+        workload: 0.82,
+        description: "Se consolida el análisis económico y se prepara la presentación."
+      },
+      {
+        id: "comite",
+        label: "Revisión y aprobación",
+        lane: "capex",
+        x: 760,
+        y: 70,
+        width: 220,
+        height: 70,
+        start: 8.9,
+        duration: 1.8,
+        workload: 0.65,
+        description: "Comité revisa escenarios y valida la inversión propuesta."
+      },
+      {
+        id: "contratos",
+        label: "Gestionar contrataciones",
+        lane: "contrataciones",
+        x: 300,
+        y: 80,
+        width: 240,
+        height: 70,
+        start: 10.2,
+        duration: 2.5,
+        workload: 0.62,
+        description: "Se formalizan contratos, licitaciones e implicaciones legales."
+      },
+      {
+        id: "implementacion",
+        label: "Implementación y seguimiento",
+        lane: "seguimiento",
+        x: 380,
+        y: 62,
+        width: 260,
+        height: 70,
+        start: 13.2,
+        duration: 3.2,
+        workload: 0.54,
+        description: "Equipo ejecuta el plan, monitorea indicadores y ajusta tareas."
+      },
+      {
+        id: "cierre",
+        label: "Cierre y retroalimentación",
+        lane: "seguimiento",
+        x: 700,
+        y: 62,
+        width: 240,
+        height: 70,
+        start: 16.7,
+        duration: 1.6,
+        workload: 0.32,
+        description: "Se documentan resultados, aprendizajes y se comunica a las partes."
+      }
+    ];
+
+    const laneMap = new Map(swimlanes.map((lane, index) => [lane.id, { ...lane, index }]));
+    const activityMap = new Map(activities.map(activity => [activity.id, activity]));
+
+    activities.forEach(activity => {
+      activity.end = activity.start + activity.duration;
     });
+
+    const flows = [
+      { from: "detectar", to: "solicitud" },
+      { from: "solicitud", to: "analisis" },
+      { from: "analisis", to: "presupuesto" },
+      { from: "presupuesto", to: "comite" },
+      { from: "comite", to: "contratos" },
+      { from: "contratos", to: "implementacion" },
+      { from: "implementacion", to: "cierre" }
+    ].map(flow => {
+      const source = activityMap.get(flow.from);
+      const target = activityMap.get(flow.to);
+      const start = source.end;
+      const end = Math.max(start + 0.15, target.start);
+      return { ...flow, start, end };
+    });
+
+    const svg = document.getElementById("diagram");
+    const laneGroup = document.getElementById("lanes");
+    const flowGroup = document.getElementById("flows");
+    const activityGroup = document.getElementById("activities");
+
+    const laneHeight = 160;
+    const laneLabelWidth = 210;
+    const diagramWidth = 1100;
+    const diagramHeight = laneHeight * swimlanes.length + 80;
+
+    svg.setAttribute("viewBox", `0 0 ${diagramWidth} ${diagramHeight}`);
+
+    const createSvgElement = (name, attributes = {}) => {
+      const element = document.createElementNS("http://www.w3.org/2000/svg", name);
+      Object.entries(attributes).forEach(([key, value]) => {
+        element.setAttribute(key, value);
+      });
+      return element;
+    };
+
+    const heatStops = [
+      { value: 0, color: [26, 152, 80] },
+      { value: 0.5, color: [254, 224, 139] },
+      { value: 1, color: [215, 48, 39] }
+    ];
+
+    const interpolate = (a, b, t) => a + (b - a) * t;
+
+    const toColor = rgb => `rgb(${rgb.map(channel => Math.round(channel)).join(",")})`;
+
+    const heatColor = value => {
+      const clamped = Math.max(0, Math.min(1, value));
+      let lower = heatStops[0];
+      let upper = heatStops[heatStops.length - 1];
+      for (let i = 0; i < heatStops.length - 1; i++) {
+        if (clamped >= heatStops[i].value && clamped <= heatStops[i + 1].value) {
+          lower = heatStops[i];
+          upper = heatStops[i + 1];
+          break;
+        }
+      }
+      const range = upper.value - lower.value || 1;
+      const t = (clamped - lower.value) / range;
+      const color = lower.color.map((channel, index) => interpolate(channel, upper.color[index], t));
+      return toColor(color);
+    };
+
+    const wrapLines = (text, maxChars) => {
+      const words = text.split(" ");
+      const lines = [];
+      let current = "";
+      words.forEach(word => {
+        const candidate = current ? `${current} ${word}` : word;
+        if (candidate.length > maxChars && current) {
+          lines.push(current);
+          current = word;
+        } else if (candidate.length > maxChars) {
+          const chunkRegex = new RegExp(`.{1,${maxChars}}`, "g");
+          const chunks = word.match(chunkRegex) || [word];
+          if (current) {
+            lines.push(current);
+            current = "";
+          }
+          lines.push(...chunks.slice(0, chunks.length - 1));
+          current = chunks[chunks.length - 1];
+        } else {
+          current = candidate;
+        }
+      });
+      if (current) lines.push(current);
+      return lines;
+    };
+
+    const renderLanes = () => {
+      swimlanes.forEach((lane, index) => {
+        const y = index * laneHeight + 30;
+        const laneBackground = createSvgElement("rect", {
+          x: laneLabelWidth,
+          y,
+          width: diagramWidth - laneLabelWidth - 40,
+          height: laneHeight - 20,
+          class: "lane-background"
+        });
+        laneGroup.appendChild(laneBackground);
+
+        const divider = createSvgElement("line", {
+          x1: laneLabelWidth,
+          x2: diagramWidth - 30,
+          y1: y,
+          y2: y,
+          class: "lane-divider"
+        });
+        laneGroup.appendChild(divider);
+
+        const label = createSvgElement("text", {
+          x: laneLabelWidth - 16,
+          y: y + (laneHeight - 20) / 2,
+          class: "lane-label",
+          "text-anchor": "end",
+          "dominant-baseline": "middle"
+        });
+        label.textContent = lane.label;
+        laneGroup.appendChild(label);
+      });
+
+      const bottomDivider = createSvgElement("line", {
+        x1: laneLabelWidth,
+        x2: diagramWidth - 30,
+        y1: swimlanes.length * laneHeight + 10,
+        y2: swimlanes.length * laneHeight + 10,
+        class: "lane-divider"
+      });
+      laneGroup.appendChild(bottomDivider);
+    };
+
+    const activityElements = new Map();
+    const flowElements = new Map();
+
+    const renderActivities = () => {
+      activities.forEach(activity => {
+        const lane = laneMap.get(activity.lane);
+        const absoluteX = laneLabelWidth + activity.x;
+        const absoluteY = lane.index * laneHeight + activity.y;
+
+        const group = createSvgElement("g", { class: "activity", "data-id": activity.id });
+        const rect = createSvgElement("rect", {
+          x: absoluteX,
+          y: absoluteY,
+          width: activity.width,
+          height: activity.height,
+          fill: heatColor(activity.workload)
+        });
+        group.appendChild(rect);
+
+        const title = createSvgElement("title");
+        title.textContent = `${activity.label}: ${activity.description}`;
+        group.appendChild(title);
+
+        const text = createSvgElement("text", {
+          x: absoluteX + activity.width / 2,
+          y: absoluteY + 26,
+          "text-anchor": "middle"
+        });
+        const lines = wrapLines(activity.label, Math.max(14, Math.floor(activity.width / 16)));
+        lines.forEach((line, index) => {
+          const tspan = createSvgElement("tspan", {
+            x: absoluteX + activity.width / 2,
+            dy: index === 0 ? 0 : 16
+          });
+          tspan.textContent = line;
+          text.appendChild(tspan);
+        });
+        group.appendChild(text);
+
+        const meta = createSvgElement("text", {
+          x: absoluteX + activity.width / 2,
+          y: absoluteY + activity.height - 12,
+          class: "meta",
+          "text-anchor": "middle"
+        });
+        meta.textContent = `Carga: ${(activity.workload * 100).toFixed(0)}%`;
+        group.appendChild(meta);
+
+        activityGroup.appendChild(group);
+        activityElements.set(activity.id, { group, rect });
+
+        activity.absoluteX = absoluteX;
+        activity.absoluteY = absoluteY;
+      });
+    };
+
+    const renderFlows = () => {
+      flows.forEach(flow => {
+        const from = activityMap.get(flow.from);
+        const to = activityMap.get(flow.to);
+        const fromX = from.absoluteX + from.width;
+        const fromY = from.absoluteY + from.height / 2;
+        const toX = to.absoluteX;
+        const toY = to.absoluteY + to.height / 2;
+
+        const controlOffset = Math.min(Math.abs(toX - fromX) / 2, 160);
+        const pathData = `M ${fromX} ${fromY} C ${fromX + controlOffset} ${fromY}, ${toX - controlOffset} ${toY}, ${toX} ${toY}`;
+
+        const path = createSvgElement("path", {
+          d: pathData,
+          class: "flow-line",
+          "marker-end": "url(#arrow)",
+          "data-id": `${flow.from}-${flow.to}`
+        });
+
+        flowGroup.appendChild(path);
+        flowElements.set(`${flow.from}-${flow.to}`, path);
+      });
+    };
+
+    renderLanes();
+    renderActivities();
+    renderFlows();
+
+    const isActivityActive = (activity, time) => time >= activity.start && time <= activity.end;
+    const isFlowActive = (flow, time) => time >= flow.start && time <= flow.end;
+
+    const updateTime = value => {
+      activities.forEach(activity => {
+        const { group } = activityElements.get(activity.id);
+        group.classList.toggle("is-active", isActivityActive(activity, value));
+      });
+
+      flows.forEach(flow => {
+        const path = flowElements.get(`${flow.from}-${flow.to}`);
+        path.classList.toggle("is-active", isFlowActive(flow, value));
+      });
+    };
+
+    const timeline = document.getElementById("timeline");
+    const timeValue = document.getElementById("timeValue");
+    const togglePlay = document.getElementById("togglePlay");
+
+    let playing = true;
+    let animationFrame = null;
+    let lastTimestamp = null;
+    const playbackSpeed = 0.75;
+
+    const step = timestamp => {
+      if (!playing) {
+        lastTimestamp = null;
+        return;
+      }
+      if (lastTimestamp == null) {
+        lastTimestamp = timestamp;
+      }
+      const delta = (timestamp - lastTimestamp) / 1000;
+      lastTimestamp = timestamp;
+      const max = parseFloat(timeline.max);
+      let current = parseFloat(timeline.value);
+      current += delta * playbackSpeed;
+      if (current > max) {
+        current = 0;
+      }
+      timeline.value = current.toFixed(2);
+      timeValue.value = current.toFixed(1);
+      updateTime(current);
+      animationFrame = requestAnimationFrame(step);
+    };
+
+    timeline.addEventListener("input", event => {
+      const value = parseFloat(event.target.value);
+      timeValue.value = value.toFixed(1);
+      updateTime(value);
+    });
+
+    togglePlay.addEventListener("click", () => {
+      playing = !playing;
+      togglePlay.textContent = playing ? "⏸️ Pausar animación" : "▶️ Reproducir";
+      togglePlay.setAttribute("aria-pressed", String(playing));
+      if (playing) {
+        animationFrame = requestAnimationFrame(step);
+      } else if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+    });
+
+    const initialize = () => {
+      const initial = parseFloat(timeline.value);
+      timeValue.value = initial.toFixed(1);
+      updateTime(initial);
+      animationFrame = requestAnimationFrame(step);
+    };
+
+    initialize();
   </script>
 </body>
 </html>
