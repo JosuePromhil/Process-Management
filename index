@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hola Mundo</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+    html, body { height: 100%; margin: 0; }
+    body { display: grid; place-items: center; background: #f7f7f8; color: #111; }
+    .card {
+      background: #fff;
+      padding: 2.5rem 3rem;
+      border-radius: 1.25rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,.07);
+      text-align: center;
+      max-width: 640px;
+    }
+    h1 { margin: 0 0 .5rem; font-size: clamp(2rem, 2.5vw + 1rem, 3rem); }
+    p { margin: 0 0 1.25rem; line-height: 1.6; color: #333; }
+    button {
+      border: 0; padding: .8rem 1rem; border-radius: .8rem; cursor: pointer;
+      background: #111; color: #fff; font-weight: 600;
+    }
+    button:active { transform: translateY(1px); }
+    footer { margin-top: 1rem; font-size: .9rem; color: #666; }
+  </style>
+</head>
+<body>
+  <main class="card" role="main">
+    <h1>¡Hola, mundo! 👋</h1>
+    <p>Este es un ejemplo mínimo de una página HTML lista para usar.</p>
+    <button id="btn">Saludar</button>
+    <footer>HTML5 • Accesible • Responsive</footer>
+  </main>
+
+  <script>
+    document.getElementById('btn').addEventListener('click', () => {
+      alert('¡Hola desde JavaScript!');
+    });
+  </script>
+</body>
+</html>
